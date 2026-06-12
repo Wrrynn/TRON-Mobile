@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Wajib agar aplikasi bisa memanggil API Tripmo (HTTP/HTTPS). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="tripmo_mobile"
         android:name="${applicationName}"
