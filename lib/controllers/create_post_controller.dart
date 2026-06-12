@@ -33,6 +33,19 @@ class CreatePostController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Tambah destinasi lengkap dengan koordinat (dari hasil geocoding) agar
+  /// postingan langsung muncul di peta.
+  void addPlace(String name, double? lat, double? lng) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+    destinations.add(Destination(name: trimmed, lat: lat, lng: lng));
+    notifyListeners();
+  }
+
+  /// Nama lokasi utama (dipakai sebagai `location`) — destinasi pertama bila ada.
+  String? get primaryLocation =>
+      destinations.isNotEmpty ? destinations.first.name : null;
+
   void removeDestination(int index) {
     destinations.removeAt(index);
     notifyListeners();

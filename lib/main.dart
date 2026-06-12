@@ -4,10 +4,11 @@ import 'package:provider/provider.dart';
 
 import 'config/app_theme.dart';
 import 'controllers/auth_controller.dart';
-import 'controllers/feed_controller.dart';
+import 'controllers/map_home_controller.dart';
 import 'services/api_client.dart';
 import 'services/auth_api.dart';
 import 'services/auth_storage.dart';
+import 'services/geocoding_service.dart';
 import 'services/post_api.dart';
 import 'views/auth_gate.dart';
 
@@ -20,23 +21,27 @@ Future<void> main() async {
   final apiClient = ApiClient(storage);
   final authApi = AuthApi(apiClient, storage);
   final postApi = PostApi(apiClient);
+  final geocoding = GeocodingService();
 
   final authController = AuthController(authApi, storage);
   await authController.bootstrap(); // cek token tersimpan sebelum UI tampil
 
   runApp(TripmoApp(
     postApi: postApi,
+    geocoding: geocoding,
     authController: authController,
   ));
 }
 
 class TripmoApp extends StatelessWidget {
   final PostApi postApi;
+  final GeocodingService geocoding;
   final AuthController authController;
 
   const TripmoApp({
     super.key,
     required this.postApi,
+    required this.geocoding,
     required this.authController,
   });
 
@@ -46,10 +51,11 @@ class TripmoApp extends StatelessWidget {
       providers: [
         // Service layer (dipakai controller per-halaman lewat context.read).
         Provider<PostApi>.value(value: postApi),
+        Provider<GeocodingService>.value(value: geocoding),
         // Controller global.
         ChangeNotifierProvider<AuthController>.value(value: authController),
-        ChangeNotifierProvider<FeedController>(
-          create: (_) => FeedController(postApi),
+        ChangeNotifierProvider<MapHomeController>(
+          create: (_) => MapHomeController(postApi, geocoding),
         ),
       ],
       child: MaterialApp(

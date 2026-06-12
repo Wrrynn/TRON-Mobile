@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../config/app_theme.dart';
 import '../../controllers/auth_controller.dart';
+import '../widgets/glass.dart';
+import 'auth_background.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -48,19 +51,33 @@ class _RegisterViewState extends State<RegisterView> {
     final busy = context.watch<AuthController>().busy;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Buat Akun')),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('Buat Akun'),
+      ),
+      body: AuthBackground(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Glass(
+                  radius: const BorderRadius.all(Radius.circular(28)),
+                  opacity: 0.45,
+                  blur: 24,
+                  padding: const EdgeInsets.all(26),
+                  shadow: Glass.floatingShadow,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const _RegisterBrand(),
+                        const SizedBox(height: 24),
+                        TextFormField(
                       controller: _name,
                       textCapitalization: TextCapitalization.words,
                       decoration: const InputDecoration(
@@ -110,13 +127,49 @@ class _RegisterViewState extends State<RegisterView> {
                             )
                           : const Text('Daftar'),
                     ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Header merek kecil untuk halaman daftar.
+class _RegisterBrand extends StatelessWidget {
+  const _RegisterBrand();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            color: AppColors.purpleBg,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Icon(Icons.travel_explore_rounded,
+              color: AppColors.purple, size: 30),
+        ),
+        const SizedBox(height: 14),
+        const Text(
+          'Bergabung dengan Tripmo',
+          style: TextStyle(
+              color: AppColors.white, fontSize: 20, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Mulai bagikan jejak perjalananmu.',
+          style: TextStyle(color: AppColors.text2),
+        ),
+      ],
     );
   }
 }

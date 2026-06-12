@@ -10,6 +10,7 @@ import '../../utils/formatters.dart';
 import '../profile/profile_view.dart';
 import '../widgets/network_photo.dart';
 import '../widgets/rating_stars.dart';
+import '../widgets/route_map.dart';
 import '../widgets/state_views.dart';
 
 class PostDetailView extends StatelessWidget {
@@ -156,8 +157,12 @@ class _PostDetailBody extends StatelessWidget {
               ],
               if (post.destinations.isNotEmpty) ...[
                 const SizedBox(height: 20),
-                const _SectionTitle('Destinasi'),
+                const _SectionTitle('Rute Destinasi'),
                 const SizedBox(height: 10),
+                if (post.destinations.any((d) => d.lat != null && d.lng != null)) ...[
+                  RouteMap(destinations: post.destinations),
+                  const SizedBox(height: 12),
+                ],
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,

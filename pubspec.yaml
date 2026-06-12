@@ -43,6 +43,10 @@ dependencies:
   cached_network_image: ^3.4.1 # caching gambar dari Cloudinary/storage
   intl: ^0.19.0                # format tanggal & angka (rupiah)
 
+  # ── Peta interaktif (pengganti Leaflet pada web app) ──
+  flutter_map: ^7.0.2          # peta berbasis OpenStreetMap (Leaflet untuk Flutter)
+  latlong2: ^0.9.1             # tipe LatLng untuk koordinat peta
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

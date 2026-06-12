@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_theme.dart';
 import '../../controllers/auth_controller.dart';
+import '../widgets/glass.dart';
+import 'auth_background.dart';
 import 'register_view.dart';
 
 class LoginView extends StatefulWidget {
@@ -42,26 +44,33 @@ class _LoginViewState extends State<LoginView> {
     final busy = context.watch<AuthController>().busy;
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const _Brand(),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Masuk untuk berbagi cerita perjalananmu.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.text2),
-                    ),
-                    const SizedBox(height: 32),
-                    TextFormField(
+      body: AuthBackground(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Glass(
+                  radius: const BorderRadius.all(Radius.circular(28)),
+                  opacity: 0.45,
+                  blur: 24,
+                  padding: const EdgeInsets.all(26),
+                  shadow: Glass.floatingShadow,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const _Brand(),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Masuk untuk berbagi cerita perjalananmu.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppColors.text2),
+                        ),
+                        const SizedBox(height: 32),
+                        TextFormField(
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
@@ -117,7 +126,9 @@ class _LoginViewState extends State<LoginView> {
                         ),
                       ],
                     ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),

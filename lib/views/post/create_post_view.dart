@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_theme.dart';
 import '../../controllers/create_post_controller.dart';
+import '../../services/geocoding_service.dart';
 import '../../services/post_api.dart';
 import '../../utils/formatters.dart';
 
@@ -34,7 +35,6 @@ class _CreatePostFormState extends State<_CreatePostForm> {
   final _location = TextEditingController();
   final _story = TextEditingController();
   final _budget = TextEditingController();
-  final _destination = TextEditingController();
   DateTime? _travelDate;
 
   final _picker = ImagePicker();
@@ -45,7 +45,6 @@ class _CreatePostFormState extends State<_CreatePostForm> {
     _location.dispose();
     _story.dispose();
     _budget.dispose();
-    _destination.dispose();
     super.dispose();
   }
 
@@ -73,9 +72,14 @@ class _CreatePostFormState extends State<_CreatePostForm> {
     final ctrl = context.read<CreatePostController>();
     final budget = int.tryParse(_budget.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
 
+    // Lokasi utama: input manual → destinasi pertama → judul (agar muncul di peta).
+    final location = _location.text.trim().isNotEmpty
+        ? _location.text.trim()
+        : (ctrl.primaryLocation ?? _title.text.trim());
+
     final post = await ctrl.submit(
       title: _title.text.trim(),
-      location: _location.text.trim(),
+      location: location,
       story: _story.text.trim(),
       totalBudget: budget,
       travelDate: _travelDate?.toIso8601String().split('T').first,
@@ -172,15 +176,7 @@ class _CreatePostFormState extends State<_CreatePostForm> {
                 ),
               ),
               const SizedBox(height: 20),
-              _DestinationEditor(
-                controller: _destination,
-                destinations: ctrl.destinations,
-                onAdd: () {
-                  ctrl.addDestination(_destination.text);
-                  _destination.clear();
-                },
-                onRemove: ctrl.removeDestination,
-              ),
+              const _DestinationPicker(),
               const SizedBox(height: 28),
               ElevatedButton.icon(
                 onPressed: ctrl.submitting ? null : _submit,
@@ -279,43 +275,106 @@ class _PhotoPicker extends StatelessWidget {
   }
 }
 
-class _DestinationEditor extends StatelessWidget {
-  final TextEditingController controller;
-  final List destinations;
-  final VoidCallback onAdd;
-  final void Function(int index) onRemove;
+/// Pemilih destinasi dengan pencarian lokasi (geocoding) agar tiap destinasi
+/// punya koordinat → postingan tampil di peta. Bisa juga menambah manual.
+class _DestinationPicker extends StatefulWidget {
+  const _DestinationPicker();
 
-  const _DestinationEditor({
-    required this.controller,
-    required this.destinations,
-    required this.onAdd,
-    required this.onRemove,
-  });
+  @override
+  State<_DestinationPicker> createState() => _DestinationPickerState();
+}
+
+class _DestinationPickerState extends State<_DestinationPicker> {
+  final _input = TextEditingController();
+  List<GeoPlace> _suggestions = [];
+  bool _searching = false;
+  int _seq = 0;
+
+  @override
+  void dispose() {
+    _input.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onChanged(String value) async {
+    final token = ++_seq;
+    final q = value.trim();
+    if (q.length < 2) {
+      setState(() {
+        _suggestions = [];
+        _searching = false;
+      });
+      return;
+    }
+    setState(() => _searching = true);
+    final geo = context.read<GeocodingService>();
+    final results = await geo.search(q);
+    if (!mounted || token != _seq) return; // hasil basi → abaikan
+    setState(() {
+      _suggestions = results;
+      _searching = false;
+    });
+  }
+
+  void _pick(GeoPlace place) {
+    // Ambil bagian pertama nama yang panjang dari Nominatim agar ringkas.
+    final shortName = place.name.split(',').first.trim();
+    context.read<CreatePostController>().addPlace(
+          shortName,
+          place.point.latitude,
+          place.point.longitude,
+        );
+    _input.clear();
+    setState(() => _suggestions = []);
+  }
+
+  void _addManual() {
+    final text = _input.text.trim();
+    if (text.isEmpty) return;
+    context.read<CreatePostController>().addDestination(text);
+    _input.clear();
+    setState(() => _suggestions = []);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final ctrl = context.watch<CreatePostController>();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Destinasi',
+        const Text('Rute Destinasi',
             style: TextStyle(
                 color: AppColors.white, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 4),
+        const Text('Cari lokasi agar muncul di peta, atau tambah manual.',
+            style: TextStyle(color: AppColors.text3, fontSize: 12)),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  hintText: 'mis. Dago, Lembang...',
-                  prefixIcon: Icon(Icons.place_outlined),
+                controller: _input,
+                onChanged: _onChanged,
+                onSubmitted: (_) => _addManual(),
+                decoration: InputDecoration(
+                  hintText: 'mis. Dago, Bromo, Malioboro...',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _searching
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2)),
+                        )
+                      : null,
                 ),
-                onSubmitted: (_) => onAdd(),
               ),
             ),
             const SizedBox(width: 8),
             IconButton.filled(
-              onPressed: onAdd,
+              onPressed: _addManual,
               icon: const Icon(Icons.add),
               style: IconButton.styleFrom(
                 backgroundColor: AppColors.purple,
@@ -324,19 +383,60 @@ class _DestinationEditor extends StatelessWidget {
             ),
           ],
         ),
-        if (destinations.isNotEmpty) ...[
-          const SizedBox(height: 10),
+        // Saran lokasi.
+        if (_suggestions.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.bg3,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border2),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (final s in _suggestions)
+                  ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.place_outlined,
+                        color: AppColors.purple, size: 20),
+                    title: Text(s.name.split(',').first.trim(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: AppColors.text, fontSize: 14)),
+                    subtitle: Text(s.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: AppColors.text3, fontSize: 11)),
+                    onTap: () => _pick(s),
+                  ),
+              ],
+            ),
+          ),
+        ],
+        // Destinasi terpilih.
+        if (ctrl.destinations.isNotEmpty) ...[
+          const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (var i = 0; i < destinations.length; i++)
+              for (var i = 0; i < ctrl.destinations.length; i++)
                 Chip(
-                  label: Text(destinations[i].name),
+                  avatar: Icon(
+                    ctrl.destinations[i].lat != null
+                        ? Icons.place
+                        : Icons.place_outlined,
+                    size: 16,
+                    color: ctrl.destinations[i].lat != null
+                        ? AppColors.purple
+                        : AppColors.text3,
+                  ),
+                  label: Text(ctrl.destinations[i].name),
                   backgroundColor: AppColors.bg3,
                   labelStyle: const TextStyle(color: AppColors.text),
                   deleteIconColor: AppColors.text2,
-                  onDeleted: () => onRemove(i),
+                  onDeleted: () => ctrl.removeDestination(i),
                 ),
             ],
           ),

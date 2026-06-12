@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../config/app_theme.dart';
 import '../controllers/auth_controller.dart';
 import 'auth/login_view.dart';
-import 'root_nav.dart';
+import 'map/map_home_view.dart';
 
 /// Penentu layar awal berdasarkan status otentikasi:
 /// - unknown  → splash (sedang cek token)
@@ -19,7 +19,7 @@ class AuthGate extends StatelessWidget {
 
     switch (status) {
       case AuthStatus.authenticated:
-        return const RootNav();
+        return const MapHomeView();
       case AuthStatus.unauthenticated:
         return const LoginView();
       case AuthStatus.unknown:
