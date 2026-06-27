@@ -21,26 +21,6 @@ class TrendingItem {
   const TrendingItem(this.location, this.count, this.avgRating);
 }
 
-/// Ringkasan budget pada suatu lokasi (statistik client-side seperti web app).
-class BudgetInsight {
-  final String location;
-  final int trips;
-  final int avg;
-  final int min;
-  final int max;
-  final int q1;
-  final int q3;
-  const BudgetInsight({
-    required this.location,
-    required this.trips,
-    required this.avg,
-    required this.min,
-    required this.max,
-    required this.q1,
-    required this.q3,
-  });
-}
-
 /// Controller untuk dashboard peta (home). Memuat feed dari Laravel,
 /// meng-geocode lokasi menjadi marker, dan menghitung fitur smart secara lokal.
 class MapHomeController extends ChangeNotifier {
@@ -148,39 +128,5 @@ class MapHomeController extends ChangeNotifier {
           (p.location ?? '').toLowerCase().contains(q) ||
           p.author.toLowerCase().contains(q);
     }).toList();
-  }
-
-  /// Statistik budget pada lokasi tertentu (meniru budgetInsight web app).
-  BudgetInsight? budgetFor(String location) {
-    final q = location.trim().toLowerCase();
-    if (q.length < 2) return null;
-    final values = posts
-        .where((p) =>
-            (p.location ?? '').toLowerCase().contains(q) && p.totalBudget > 0)
-        .map((p) => p.totalBudget)
-        .toList()
-      ..sort();
-    if (values.isEmpty) return null;
-    final sum = values.reduce((a, b) => a + b);
-    return BudgetInsight(
-      location: location,
-      trips: values.length,
-      avg: (sum / values.length).round(),
-      min: values.first,
-      max: values.last,
-      q1: _percentile(values, 25),
-      q3: _percentile(values, 75),
-    );
-  }
-
-  int _percentile(List<int> sorted, int pct) {
-    final n = sorted.length;
-    if (n == 0) return 0;
-    if (n == 1) return sorted.first;
-    final index = (pct / 100) * (n - 1);
-    final lower = index.floor();
-    final upper = index.ceil();
-    final frac = index - lower;
-    return (sorted[lower] + frac * (sorted[upper] - sorted[lower])).round();
   }
 }

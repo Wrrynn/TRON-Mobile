@@ -12,6 +12,7 @@ import '../widgets/network_photo.dart';
 import '../widgets/rating_stars.dart';
 import '../widgets/route_map.dart';
 import '../widgets/state_views.dart';
+import 'edit_post_view.dart';
 
 class PostDetailView extends StatelessWidget {
   final int postId;
@@ -82,12 +83,30 @@ class _PostDetailBody extends StatelessWidget {
       appBar: AppBar(
         title: Text(post?.title ?? 'Detail'),
         actions: [
-          if (isOwner)
+          if (isOwner) ...[
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit Postingan',
+              onPressed: () async {
+                // Navigasi ke halaman edit dan tunggu hasilnya
+                final updated = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EditPostView(post: post),
+                  ),
+                );
+                
+                // Jika postingan berhasil diupdate, refresh data di halaman detail ini
+                if (updated == true && context.mounted) {
+                  ctrl.load();
+                }
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.delete_outline_rounded),
               color: AppColors.red,
               onPressed: () => _confirmDelete(context),
             ),
+          ]
         ],
       ),
       body: _buildBody(context, ctrl, post),

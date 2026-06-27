@@ -86,6 +86,36 @@ class PostApi {
     return PostDetail.fromJson(Map<String, dynamic>.from(json['data'] as Map));
   }
 
+  // Tambahkan fungsi ini di DALAM class PostApi
+  Future<PostDetail> update({
+    required int id,
+    required String title,
+    String? location,
+    String? story,
+    int totalBudget = 0,
+    String? travelDate,
+    List<Destination> destinations = const [],
+    List<String> newPhotoPaths = const [], // Kosongkan jika tidak ada foto baru
+  }) async {
+    final fields = <String, String>{
+      'title': title,
+      if (location != null && location.isNotEmpty) 'location': location,
+      if (story != null && story.isNotEmpty) 'story': story,
+      'total_budget': '$totalBudget',
+      if (travelDate != null && travelDate.isNotEmpty) 'travel_date': travelDate,
+      // Backend menerima string JSON
+      'destinations': jsonEncode(destinations.map((d) => d.toJson()).toList()),
+      '_method': 'PUT', // Penting: Memberitahu backend bahwa ini adalah proses update
+    };
+
+    final json = await _client.multipart(
+      '/posts/$id',
+      fields: fields,
+      filePaths: newPhotoPaths,
+    );
+    return PostDetail.fromJson(Map<String, dynamic>.from(json['data'] as Map));
+  }
+
   Future<void> delete(int id) async {
     await _client.delete('/posts/$id');
   }

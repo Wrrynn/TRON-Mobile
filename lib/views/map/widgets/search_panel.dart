@@ -33,7 +33,6 @@ class _SearchPanelState extends State<SearchPanel> {
   Widget build(BuildContext context) {
     final ctrl = context.watch<MapHomeController>();
     final results = ctrl.search(_query);
-    final budget = _query.trim().length >= 2 ? ctrl.budgetFor(_query) : null;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -75,8 +74,6 @@ class _SearchPanelState extends State<SearchPanel> {
           ),
         ),
         const SizedBox(height: 20),
-
-        if (budget != null) _BudgetInsightCard(budget: budget),
 
         if (_query.trim().isEmpty) ...[
           const _PanelHeading(icon: Icons.local_fire_department_rounded, text: 'Destinasi Trending'),
@@ -268,69 +265,4 @@ class _ResultTile extends StatelessWidget {
       ),
     );
   }
-}
-
-class _BudgetInsightCard extends StatelessWidget {
-  final BudgetInsight budget;
-  const _BudgetInsightCard({required this.budget});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [
-          AppColors.purple.withValues(alpha: 0.22),
-          AppColors.purple.withValues(alpha: 0.08),
-        ]),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.insights_rounded, size: 18, color: AppColors.purple),
-              const SizedBox(width: 8),
-              Text('Insight Budget · ${budget.location}',
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(child: _kv('Rata-rata', Format.rupiah(budget.avg))),
-              Expanded(child: _kv('${budget.trips} perjalanan', '')),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: _kv('Termurah', Format.rupiah(budget.min))),
-              Expanded(child: _kv('Termahal', Format.rupiah(budget.max))),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text('Kisaran wajar: ${Format.rupiah(budget.q1)} – ${Format.rupiah(budget.q3)}',
-              style: const TextStyle(color: AppColors.text2, fontSize: 12)),
-        ],
-      ),
-    );
-  }
-
-  Widget _kv(String k, String v) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(k, style: const TextStyle(color: AppColors.text2, fontSize: 11)),
-          if (v.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(v,
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
-          ],
-        ],
-      );
 }
