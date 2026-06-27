@@ -18,6 +18,7 @@ class _RegisterViewState extends State<RegisterView> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _confirmPassword = TextEditingController();
   bool _obscure = true;
 
   @override
@@ -25,6 +26,7 @@ class _RegisterViewState extends State<RegisterView> {
     _name.dispose();
     _email.dispose();
     _password.dispose();
+    _confirmPassword.dispose();
     super.dispose();
   }
 
@@ -40,9 +42,9 @@ class _RegisterViewState extends State<RegisterView> {
     if (ok) {
       Navigator.of(context).pop(); // kembali; AuthGate sudah autentik
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error ?? 'Registrasi gagal')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(auth.error ?? 'Registrasi gagal')));
     }
   }
 
@@ -78,55 +80,90 @@ class _RegisterViewState extends State<RegisterView> {
                         const _RegisterBrand(),
                         const SizedBox(height: 24),
                         TextFormField(
-                      controller: _name,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: 'Nama',
-                        prefixIcon: Icon(Icons.person_outline_rounded),
-                      ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Nama wajib diisi' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.mail_outline_rounded),
-                      ),
-                      validator: (v) =>
-                          (v == null || !v.contains('@')) ? 'Email tidak valid' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _password,
-                      obscureText: _obscure,
-                      decoration: InputDecoration(
-                        labelText: 'Password (min. 8 karakter)',
-                        prefixIcon: const Icon(Icons.lock_outline_rounded),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscure
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined),
-                          onPressed: () => setState(() => _obscure = !_obscure),
+                          controller: _name,
+                          textCapitalization: TextCapitalization.words,
+                          decoration: const InputDecoration(
+                            labelText: 'Nama',
+                            prefixIcon: Icon(Icons.person_outline_rounded),
+                          ),
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Nama wajib diisi'
+                              : null,
                         ),
-                      ),
-                      validator: (v) =>
-                          (v == null || v.length < 8) ? 'Minimal 8 karakter' : null,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: busy ? null : _submit,
-                      child: busy
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Text('Daftar'),
-                    ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _email,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            prefixIcon: Icon(Icons.mail_outline_rounded),
+                          ),
+                          validator: (v) => (v == null || !v.contains('@'))
+                              ? 'Email tidak valid'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _password,
+                          obscureText: _obscure,
+                          decoration: InputDecoration(
+                            labelText: 'Password (min. 8 karakter)',
+                            prefixIcon: const Icon(Icons.lock_outline_rounded),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
+                              onPressed: () =>
+                                  setState(() => _obscure = !_obscure),
+                            ),
+                          ),
+                          validator: (v) => (v == null || v.length < 8)
+                              ? 'Minimal 8 karakter'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _confirmPassword,
+                          obscureText: _obscure,
+                          decoration: InputDecoration(
+                            labelText: 'Konfirmasi Password',
+                            prefixIcon: const Icon(Icons.lock_outline_rounded),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
+                              onPressed: () =>
+                                  setState(() => _obscure = !_obscure),
+                            ),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return 'Harap konfirmasi password';
+                            }
+                            if (v != _password.text) {
+                              return 'Password tidak cocok';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: busy ? null : _submit,
+                          child: busy
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Daftar'),
+                        ),
                       ],
                     ),
                   ),
@@ -155,14 +192,20 @@ class _RegisterBrand extends StatelessWidget {
             color: AppColors.purpleBg,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Icon(Icons.travel_explore_rounded,
-              color: AppColors.purple, size: 30),
+          child: const Icon(
+            Icons.travel_explore_rounded,
+            color: AppColors.purple,
+            size: 30,
+          ),
         ),
         const SizedBox(height: 14),
         const Text(
           'Bergabung dengan Tripmo',
           style: TextStyle(
-              color: AppColors.white, fontSize: 20, fontWeight: FontWeight.w800),
+            color: AppColors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 4),
         const Text(
