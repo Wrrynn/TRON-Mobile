@@ -13,14 +13,6 @@ class MappedPost {
   const MappedPost(this.post, this.point);
 }
 
-/// Item destinasi trending (lokasi terbanyak diposting + rata-rata rating).
-class TrendingItem {
-  final String location;
-  final int count;
-  final double? avgRating;
-  const TrendingItem(this.location, this.count, this.avgRating);
-}
-
 /// Controller untuk dashboard peta (home). Memuat feed dari Laravel,
 /// meng-geocode lokasi menjadi marker, dan menghitung fitur smart secara lokal.
 class MapHomeController extends ChangeNotifier {
@@ -100,23 +92,27 @@ class MapHomeController extends ChangeNotifier {
     return LatLng(lat, lng);
   }
 
-  /// Destinasi trending — dikelompokkan per lokasi (meniru SmartSystemController).
-  List<TrendingItem> trending({int limit = 8}) {
-    final groups = <String, List<PostCard>>{};
-    for (final p in posts) {
-      final loc = (p.location ?? '').trim();
-      if (loc.isEmpty) continue;
-      groups.putIfAbsent(loc, () => []).add(p);
-    }
-    final items = groups.entries.map((e) {
-      final ratings = e.value.map((p) => p.rating).whereType<double>().toList();
-      final avg = ratings.isEmpty
-          ? null
-          : ratings.reduce((a, b) => a + b) / ratings.length;
-      return TrendingItem(e.key, e.value.length, avg);
-    }).toList()
-      ..sort((a, b) => b.count.compareTo(a.count));
-    return items.take(limit).toList();
+  /// Jejak Terpopuler — mengurutkan postingan berdasarkan rating tertinggi.
+  List<PostCard> popularPosts({int limit = 5}) {
+    // Buat salinan list agar tidak mengubah urutan asli pada feed
+    final sorted = List<PostCard>.from(posts);
+    
+    sorted.sort((a, b) {
+      // 1. Pengurutan Utama: Berdasarkan rating (descending / terbesar ke terkecil)
+      final ratingA = a.rating ?? 0;
+      final ratingB = b.rating ?? 0;
+      final ratingCompare = ratingB.compareTo(ratingA);
+      
+      // Jika ratingnya berbeda, gunakan urutan rating ini
+      if (ratingCompare != 0) {
+        return ratingCompare;
+      }
+      
+      // 2. Pengurutan Sekunder (Tie-breaker): Jika rating SAMA, urutkan berdasarkan ID terbaru
+      return a.id.compareTo(b.id);
+    });
+    
+    return sorted.take(limit).toList();
   }
 
   /// Pencarian sederhana berdasarkan judul / lokasi / penulis.
