@@ -106,21 +106,6 @@ class _MapHomeViewState extends State<MapHomeView> {
                 userAgentPackageName: 'com.tripmo.mobile',
                 maxZoom: 19,
               ),
-              MarkerLayer(
-                markers: [
-                  for (final m in ctrl.mapped)
-                    Marker(
-                      point: m.point,
-                      width: 40,
-                      height: 44,
-                      alignment: Alignment.topCenter,
-                      child: PostPin(
-                        active: identical(_selected, m),
-                        onTap: () => _selectMarker(m),
-                      ),
-                    ),
-                ],
-              ),
             ],
           ),
 
@@ -176,20 +161,7 @@ class _MapHomeViewState extends State<MapHomeView> {
 
           if (ctrl.error != null && ctrl.posts.isEmpty)
             Positioned.fill(child: _ErrorOverlay(message: ctrl.error!, onRetry: ctrl.load)),
-
-          // ── Mini card marker terpilih ──
-          if (_selected != null)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 104,
-              child: MapPostCard(
-                post: _selected!.post,
-                onTap: () => _openPost(_selected!.post.id),
-                onClose: () => setState(() => _selected = null),
-              ),
-            ),
-
+            
           // ── Bottom bar glass ──
           Positioned(
             left: 0,
