@@ -200,6 +200,8 @@ class _EditPostBody extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final photoUrl = ctrl.originalPhotos[index];
                     final isMarkedForDelete = ctrl.photosToDelete.contains(photoUrl);
+
+                    debugPrint('URL FOTO DARI SERVER: $photoUrl');
                     
                     return GestureDetector(
                       onTap: () => ctrl.toggleDeletePhoto(photoUrl),
@@ -268,6 +270,56 @@ class _EditPostBody extends StatelessWidget {
                 ),
               ],
             ),
+            
+            const SizedBox(height: 12),
+
+            // MENGGUNAKAN IMAGE.FILE UNTUK PREVIEW FOTO LOKAL
+            if (ctrl.newPhotos.isNotEmpty)
+              SizedBox(
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: ctrl.newPhotos.length,
+                  itemBuilder: (context, index) {
+                    final xfile = ctrl.newPhotos[index];
+                    
+                    return Container(
+                      width: 100,
+                      margin: const EdgeInsets.only(right: 12),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // Widget inti untuk membaca file dari memori HP
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(xfile.path),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => 
+                                  const Icon(Icons.broken_image, color: Colors.grey),
+                            ),
+                          ),
+                          // Tombol silang untuk membatalkan pilihan foto
+                          Positioned(
+                            top: 4, right: 4,
+                            child: GestureDetector(
+                              onTap: () => ctrl.removeNewPhoto(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54, 
+                                  shape: BoxShape.circle
+                                ),
+                                child: const Icon(Icons.close, color: Colors.white, size: 14),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
 
             const SizedBox(height: 40),
             

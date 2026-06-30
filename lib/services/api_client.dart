@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'dart:typed_data'; 
 import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
@@ -82,6 +84,8 @@ class ApiClient {
     try {
       res = await run();
     } catch (e) {
+      // PERBAIKAN: Cetak error asli ke terminal agar kita tahu penyebab pastinya
+      debugPrint('ERROR ASLI API CLIENT: $e');
       throw ApiException('Tidak dapat terhubung ke server. Periksa koneksi.');
     }
 

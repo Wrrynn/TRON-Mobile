@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 import '../config/app_config.dart';
 import '../models/destination.dart';
@@ -104,15 +105,22 @@ class PostApi {
       'total_budget': '$totalBudget',
       if (travelDate != null && travelDate.isNotEmpty) 'travel_date': travelDate,
       'destinations': jsonEncode(destinations.map((d) => d.toJson()).toList()),
-      // HAPUS BARIS INI: '_method': 'PUT', 
+      // Tambahkan ini untuk berjaga-jaga jika server butuh penanda
+      '_method': 'POST', 
     };
 
-    final json = await _client.multipart(
-      '/posts/$id/update', // Sesuaikan URL ini
-      fields: fields,
-      filePaths: newPhotoPaths,
-    );
-    return PostDetail.fromJson(Map<String, dynamic>.from(json['data'] as Map));
+    try {
+      final json = await _client.multipart(
+        '/posts/$id/update', 
+        fields: fields,
+        filePaths: newPhotoPaths,
+      );
+      return PostDetail.fromJson(Map<String, dynamic>.from(json['data'] as Map));
+    } catch (e) {
+      // Tambahkan print ini di terminal VS Code untuk melihat detail error sebenarnya
+      debugPrint('Error saat update post: $e');
+      rethrow;
+    }
   }
 
   Future<void> delete(int id) async {
