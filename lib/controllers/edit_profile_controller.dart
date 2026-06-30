@@ -25,11 +25,13 @@ class EditProfileController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // TODO: Panggil fungsi API Anda di sini untuk mengupdate nama
-      // Contoh: await _api.updateProfile(name: nameCtrl.text.trim());
+      // Memanggil fungsi updateProfile dari API yang sekarang sudah bisa diakses
+      final updatedUser = await _authController.api.updateProfile(
+        name: nameCtrl.text.trim(),
+      );
       
-      // Simulasi delay jaringan (hapus ini saat dihubungkan ke API)
-      await Future.delayed(const Duration(seconds: 1));
+      // Memperbarui data pengguna di memori lokal agar UI langsung berubah
+      _authController.updateUser(updatedUser);
 
       isLoading = false;
       notifyListeners();
@@ -48,11 +50,12 @@ class EditProfileController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // TODO: Panggil fungsi API Anda di sini untuk menghapus akun
-      // Contoh: await _api.deleteAccount();
+      // Memanggil fungsi deleteAccount dari API backend
+      await _authController.api.deleteAccount();
       
-      // Simulasi delay jaringan
-      await Future.delayed(const Duration(seconds: 1));
+      // PERBAIKAN 3: Gunakan fungsi logout() alih-alih clearUserState()
+      // Fungsi ini akan membersihkan token, mengosongkan user, dan mengembalikan status unauthenticated
+      await _authController.logout();
 
       isLoading = false;
       notifyListeners();

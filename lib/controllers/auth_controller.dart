@@ -22,6 +22,9 @@ class AuthController extends ChangeNotifier {
 
   bool get isLoggedIn => status == AuthStatus.authenticated;
 
+  // PERBAIKAN 1: Tambahkan getter agar _authApi bisa diakses oleh controller lain
+  AuthApi get api => _authApi;
+
   /// Dipanggil saat start: jika ada token, ambil profil user.
   Future<void> bootstrap() async {
     await _storage.load();
@@ -54,6 +57,13 @@ class AuthController extends ChangeNotifier {
     user = null;
     status = AuthStatus.unauthenticated;
     notifyListeners();
+  }
+
+  // PERBAIKAN 2: Tambahkan fungsi untuk mengupdate data user di memori lokal
+  // Fungsi ini dipanggil setelah proses edit profil berhasil di server
+  void updateUser(User updatedUser) {
+    user = updatedUser;
+    notifyListeners(); // Memicu UI (seperti halaman profil) untuk me-refresh tampilannya
   }
 
   Future<bool> _run(Future<AuthResult> Function() action) async {

@@ -46,6 +46,35 @@ class AuthApi {
     return User.fromJson(Map<String, dynamic>.from(json['user'] as Map));
   }
 
+  /// Memperbarui nama dan/atau bio pengguna menggunakan metode POST
+  Future<User> updateProfile({
+    required String name,
+    String? bio,
+  }) async {
+    final bodyData = <String, String>{
+      'name': name,
+    };
+    
+    // Hanya tambahkan bio ke request jika nilainya ada
+    if (bio != null && bio.isNotEmpty) {
+      bodyData['bio'] = bio;
+    }
+
+    final json = await _client.post('/user/update', body: bodyData);
+    
+    // Mengembalikan objek User terbaru dari response backend
+    return User.fromJson(Map<String, dynamic>.from(json['user'] as Map));
+  }
+
+  /// Menghapus akun secara permanen dari server dan membersihkan sesi lokal
+  Future<void> deleteAccount() async {
+    // Memanggil endpoint DELETE /api/user
+    await _client.delete('/user');
+    
+    // Membersihkan token lokal agar user langsung logout
+    await _storage.clear();
+  }
+
   /// Logout di server lalu hapus token lokal.
   Future<void> logout() async {
     try {

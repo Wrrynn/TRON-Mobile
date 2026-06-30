@@ -95,7 +95,7 @@ class PostApi {
     int totalBudget = 0,
     String? travelDate,
     List<Destination> destinations = const [],
-    List<String> newPhotoPaths = const [], // Kosongkan jika tidak ada foto baru
+    List<String> newPhotoPaths = const [],
   }) async {
     final fields = <String, String>{
       'title': title,
@@ -103,13 +103,12 @@ class PostApi {
       if (story != null && story.isNotEmpty) 'story': story,
       'total_budget': '$totalBudget',
       if (travelDate != null && travelDate.isNotEmpty) 'travel_date': travelDate,
-      // Backend menerima string JSON
       'destinations': jsonEncode(destinations.map((d) => d.toJson()).toList()),
-      '_method': 'PUT', // Penting: Memberitahu backend bahwa ini adalah proses update
+      // HAPUS BARIS INI: '_method': 'PUT', 
     };
 
     final json = await _client.multipart(
-      '/posts/$id',
+      '/posts/$id/update', // Sesuaikan URL ini
       fields: fields,
       filePaths: newPhotoPaths,
     );
